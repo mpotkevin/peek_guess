@@ -25,7 +25,6 @@
             min-height: 100vh; overflow-x: hidden;
         }
 
-        /* 標題控制 */
         header {
             width: 100%; background: var(--panel-white); color: var(--primary-action);
             padding: 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
@@ -38,7 +37,7 @@
 
         h1 { margin: 0; font-size: 22px; letter-spacing: 2px; font-weight: 900; }
 
-        /* 遊戲區域核心設定：4:3 比例與螢幕置中 */
+        /* 遊戲區域核心設定：固定 4:3 比例 */
         .game-wrapper {
             width: 95%; 
             max-width: 800px; 
@@ -55,7 +54,8 @@
             width: 100%; 
             aspect-ratio: 4 / 3; 
             position: relative;
-            background: #1a1a1a; border-radius: 20px; overflow: hidden;
+            background: #000000; /* 背景黑色，讓非 4:3 圖片出現黑邊 */
+            border-radius: 20px; overflow: hidden;
             box-shadow: 0 10px 40px rgba(0,0,0,0.12); 
             display: flex; justify-content: center; align-items: center;
             border: 6px solid var(--panel-white);
@@ -63,13 +63,17 @@
         }
 
         #image-layer {
-            position: absolute; user-select: none; z-index: 1;
+            position: absolute; 
+            user-select: none; 
+            z-index: 1;
             transition: transform 0.1s ease-out, opacity 0.4s ease;
-            display: none; opacity: 0;
+            display: none; 
+            opacity: 0;
             pointer-events: none; 
+            /* 移除預設寬高限制，由 JS 計算 */
         }
         
-        /* 僅在非遊戲中（調整階段）允許拖曳圖片 */
+        /* 調整階段允許拖曳 */
         .preview-active #image-layer { pointer-events: auto; cursor: move; }
 
         #mask-svg {
@@ -91,7 +95,7 @@
             box-sizing: border-box;
         }
 
-        /* 深色文字適應（用於設定階段或淺色遮罩） */
+        /* 智慧色彩：淺色遮罩或設定模式下顯示深色文字 */
         .dark-text .hole-trigger,
         .preview-active .hole-trigger {
             color: #000000 !important; text-shadow: none !important;
@@ -101,7 +105,7 @@
         .hole-trigger:hover { border-color: currentColor; background-color: rgba(255,255,255,0.1); transform: scale(1.05); }
         .hole-trigger.revealed { opacity: 0; pointer-events: none; transform: scale(1.2); }
 
-        /* 設定模式下的特殊樣式：隱藏遮罩 */
+        /* 設定模式樣式：隱藏遮罩 */
         .preview-active #mask-svg { opacity: 0 !important; }
         .preview-active .hole-trigger { 
             border-style: solid; border-color: var(--primary-action) !important; 
@@ -109,7 +113,7 @@
             background-color: rgba(211, 84, 0, 0.1);
         }
 
-        /* 控制面板 */
+        /* 控制面板佈局 */
         .control-panel {
             width: 95%; max-width: 800px; padding: 20px;
             background: var(--panel-white); border-radius: 20px; margin-bottom: 15px;
@@ -121,7 +125,6 @@
             gap: 15px;
         }
 
-        /* 收摺邏輯 */
         .controls-hidden .control-panel { height: 0; padding: 0; margin-bottom: 0; opacity: 0; pointer-events: none; }
         .controls-hidden footer { opacity: 0; }
 
@@ -135,7 +138,7 @@
             margin-top: 5px;
         }
 
-        /* 按鈕規範 - 一致性大小 */
+        /* 按鈕規範 - 一致性大小與米白風格 */
         .btn {
             border: 2px solid var(--border-color); border-radius: 12px; cursor: pointer;
             font-weight: bold; transition: all 0.2s ease;
@@ -147,7 +150,6 @@
         .btn:active { transform: scale(0.96); opacity: 0.9; }
         .btn:hover { background-color: #f8f9fa; color: var(--text-main); border-color: #d1d8e0; }
 
-        /* 遊戲中狀態顏色 */
         .btn-active {
             background-color: var(--primary-action) !important;
             color: #ffffff !important;
@@ -212,6 +214,7 @@
 <button class="toggle-ui-btn" id="toggle-ui" title="展開/收起設定" onclick="toggleUIVisibility()">🛠️</button>
 
 <div class="game-wrapper">
+    <!-- 遊戲畫布與遮罩 -->
     <div class="game-view" id="game-canvas">
         <img id="image-layer" src="" alt="底圖" draggable="false">
         
@@ -262,8 +265,7 @@
                 <button class="btn btn-outline" onclick="revealAll()">👁️ 全部戳開</button>
             </div>
             <div class="action-row">
-                <!-- 原調整圖片模式按鈕，現改為 開始遊戲 -->
-                <button class="btn btn-outline" id="btn-preview" onclick="toggleGameStart()" style="width: 100%;">🎮 開始遊戲</button>
+                <button class="btn btn-outline" id="btn-start" onclick="toggleGameStart()" style="width: 100%;">🎮 開始遊戲</button>
             </div>
         </div>
     </div>
@@ -293,7 +295,7 @@
         <div class="image-list" id="image-list-ui"></div>
 
         <div id="current-adjust" style="display:none; padding: 10px; background: #fdfdfd; border-radius: 12px; border: 1px solid #eee;">
-            <label class="label-row">🔍 縮放底圖: <span id="scale-val">100%</span></label>
+            <label class="label-row">🔍 微調圖片大小: <span id="scale-val">100%</span></label>
             <input type="range" id="scale-slider" min="10" max="300" value="100">
         </div>
     </div>
@@ -317,8 +319,8 @@
 </footer>
 
 <script>
-    // --- IndexedDB 核心 ---
-    const DB_NAME = 'GuessGameDB_V4';
+    // --- IndexedDB ---
+    const DB_NAME = 'GuessGameDB_V5';
     const STORE_NAME = 'imagesStore';
     const DB_VERSION = 1;
     let db;
@@ -360,7 +362,7 @@
     // --- 變數管理 ---
     let images = []; 
     let currentIndex = -1;
-    let isPreview = true; // 初始為設定模式(無遮罩)
+    let isPreview = true; // 初始為設定模式
     let isAnswerRevealed = false;
     let isDraggingImg = false;
     let startX, startY;
@@ -375,7 +377,7 @@
     const listUI = document.getElementById('image-list-ui');
     const scaleSlider = document.getElementById('scale-slider');
     const sizeSlider = document.getElementById('size-slider');
-    const btnPreview = document.getElementById('btn-preview');
+    const btnStart = document.getElementById('btn-start');
 
     window.onload = async () => {
         try {
@@ -393,6 +395,22 @@
         setupInteraction();
     };
 
+    // --- 核心：開始遊戲與設定模式切換 ---
+    function toggleGameStart() {
+        isPreview = !isPreview;
+        if (!isPreview) {
+            document.body.classList.remove('preview-active');
+            btnStart.classList.add('btn-active');
+            btnStart.innerText = '🛠️ 返回設定';
+        } else {
+            document.body.classList.add('preview-active');
+            btnStart.classList.remove('btn-active');
+            btnStart.innerText = '🎮 開始遊戲';
+            isAnswerRevealed = false;
+            canvas.parentElement.classList.remove('hide-mask');
+        }
+    }
+
     // --- 介面收摺 ---
     function toggleUIVisibility() {
         uiVisible = !uiVisible;
@@ -402,26 +420,6 @@
         } else {
             document.body.classList.add('controls-hidden');
             document.getElementById('toggle-ui').innerText = '📂';
-        }
-    }
-
-    // --- 核心：開始遊戲切換邏輯 ---
-    function toggleGameStart() {
-        isPreview = !isPreview;
-        if (!isPreview) {
-            // 進入遊戲：蓋上遮罩，按鈕變橘色
-            document.body.classList.remove('preview-active');
-            btnPreview.classList.add('btn-active');
-            btnPreview.innerText = '🛠️ 返回設定';
-        } else {
-            // 返回設定：移除遮罩，按鈕變回米白
-            document.body.classList.add('preview-active');
-            btnPreview.classList.remove('btn-active');
-            btnPreview.innerText = '🎮 開始遊戲';
-            
-            // 如果剛才公佈答案了，返回設定時也要重設
-            isAnswerRevealed = false;
-            canvas.parentElement.classList.remove('hide-mask');
         }
     }
 
@@ -435,27 +433,9 @@
         refreshMask();
     }
 
-    // --- 導覽功能 ---
-    function toggleAnswerRevealed() {
-        if (isPreview) return; // 設定模式下不公佈答案
-        isAnswerRevealed = !isAnswerRevealed;
-        if (isAnswerRevealed) canvas.parentElement.classList.add('hide-mask');
-        else canvas.parentElement.classList.remove('hide-mask');
-    }
-
-    function goToNextImage() {
-        if (images.length === 0) return;
-        prepareSwitch();
-        currentIndex = (currentIndex + 1) % images.length;
-        completeSwitch();
-    }
-
-    function goToPrevImage() {
-        if (images.length === 0) return;
-        prepareSwitch();
-        currentIndex = (currentIndex - 1 + images.length) % images.length;
-        completeSwitch();
-    }
+    // --- 換題邏輯與自動縮放 ---
+    function goToNextImage() { if (images.length === 0) return; prepareSwitch(); currentIndex = (currentIndex + 1) % images.length; completeSwitch(); }
+    function goToPrevImage() { if (images.length === 0) return; prepareSwitch(); currentIndex = (currentIndex - 1 + images.length) % images.length; completeSwitch(); }
 
     function prepareSwitch() {
         imgLayer.style.opacity = '0';
@@ -471,25 +451,55 @@
         loadCurrent();
     }
 
+    // 核心優化：自動計算縮放使圖片完全顯示在 4:3 區域內
     function loadCurrent() {
         if (currentIndex === -1 || !images[currentIndex]) { imgLayer.style.display = 'none'; return; }
         const img = images[currentIndex];
+        
         imgLayer.style.display = 'none';
         imgLayer.style.opacity = '0';
         imgLayer.src = img.src;
+        
         imgLayer.onload = () => {
+            const containerRect = canvas.getBoundingClientRect();
+            const cW = containerRect.width || 800;
+            const cH = containerRect.height || 600;
+            
+            // 如果該圖片還沒有手動調整過，執行自動縮放
+            if (img.scale === 1 && img.posX === 0 && img.posY === 0) {
+                const imgW = imgLayer.naturalWidth;
+                const imgH = imgLayer.naturalHeight;
+                
+                const ratioW = cW / imgW;
+                const ratioH = cH / imgH;
+                
+                // 取較小的比例以確保整張圖都在框內 (Object-fit: contain 邏輯)
+                const fitScale = Math.min(ratioW, ratioH);
+                img.scale = fitScale;
+                img.posX = 0;
+                img.posY = 0;
+            }
+            
             imgLayer.style.display = 'block';
             setTimeout(() => { imgLayer.style.opacity = '1'; }, 100);
+            updateTransform();
+            scaleSlider.value = Math.round(img.scale * 100);
+            document.getElementById('scale-val').innerText = scaleSlider.value + '%';
         };
-        scaleSlider.value = img.scale * 100;
-        document.getElementById('scale-val').innerText = Math.round(img.scale * 100) + '%';
+        
         refreshMask();
-        updateTransform();
+    }
+
+    function toggleAnswerRevealed() {
+        if (isPreview) return; 
+        isAnswerRevealed = !isAnswerRevealed;
+        if (isAnswerRevealed) canvas.parentElement.classList.add('hide-mask');
+        else canvas.parentElement.classList.remove('hide-mask');
     }
 
     function changeMask(type, btn) {
         let fill = '';
-        const isCustom = (type === 'custom');
+        const isLight = (type === 'flowers' || type === 'linen' || type === 'custom');
         if (type === 'warm') fill = 'url(#grad-warm)';
         else if (type === 'wood') fill = 'url(#pattern-wood)';
         else if (type === 'flowers') fill = 'url(#pattern-flowers)';
@@ -500,8 +510,6 @@
         document.querySelectorAll('.pattern-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
-        // 如果是自定義、碎花、布紋，遊戲階段也要用深色字（在 CSS 中已設定）
-        const isLight = (type === 'flowers' || type === 'linen' || type === 'custom');
         if (isLight) interactionLayer.classList.add('dark-text'); 
         else interactionLayer.classList.remove('dark-text'); 
     }
