@@ -90,21 +90,23 @@
             padding: 20px 15px 40px 15px; transition: all 0.3s ease; position: relative;
         }
 
-        /* 遊戲包裹容器：鎖定 16:9 比例下的寬度 */
         .game-wrapper {
-            width: 95%; max-width: 950px; 
+            width: 100%;
             display: flex; flex-direction: column; align-items: center;
-            gap: 20px; transition: all 0.3s ease;
+            gap: 20px;
         }
 
-        /* 遊戲視窗：強制精確 16:9 */
+        /* 遊戲視窗：採用動態寬度計算，確保在 16:9 比例下不受高度擠壓 */
         .game-view {
-            width: 100%; aspect-ratio: 16 / 9; position: relative; background: #000000;
+            aspect-ratio: 16 / 9;
+            width: min(95%, 950px, calc(75vh * 16 / 9));
+            height: auto;
+            position: relative; background: #000000;
             border-radius: 24px; overflow: hidden;
             box-shadow: 0 10px 40px rgba(0,0,0,0.12); 
             display: flex; justify-content: center; align-items: center;
             border: 8px solid var(--panel-white);
-            max-height: 75vh; flex-shrink: 0;
+            flex-shrink: 0;
         }
 
         #question-badge {
@@ -165,7 +167,7 @@
 
         /* 下方面板 */
         .bottom-settings {
-            width: 100%; background-color: var(--panel-white); border-radius: 20px;
+            width: min(95%, 950px, calc(75vh * 16 / 9)); background-color: var(--panel-white); border-radius: 20px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.05); overflow: hidden;
             border: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0;
         }
@@ -247,7 +249,7 @@
 
 <div class="main-content" id="scroll-content">
     <div class="game-wrapper" id="game-wrapper">
-        <!-- 鎖定 16:9 比例 -->
+        <!-- 核心優化：採用 min(...) 與 75vh 連動的精確 16:9 -->
         <div class="game-view" id="game-canvas">
             <div id="question-badge"></div>
             <img id="image-layer" src="" alt="底圖" draggable="false">
@@ -289,7 +291,6 @@
                 <span id="settings-arrow">▼</span>
             </div>
             <div class="settings-content">
-                <!-- 左側欄：視覺參數 -->
                 <div class="control-group">
                     <span class="label-row-simple">遮罩樣式</span>
                     <div class="pattern-options">
@@ -326,8 +327,8 @@
                     </div>
                 </div>
 
-                <!-- 右側欄：題目管理 -->
                 <div class="control-group">
+                    <!-- 已移除 "(可拖拽)" 字樣 -->
                     <span class="label-row-simple">題目清單</span>
                     <div class="image-list" id="image-list-ui"></div>
                     <button class="btn btn-outline" style="min-height:45px; font-size:14px; margin-top:10px; width:100%; border-style:dashed;" onclick="document.getElementById('file-input').click()">
@@ -344,7 +345,7 @@
 
 <script>
     // --- IndexedDB ---
-    const DB_NAME = 'GuessGameDB_V13';
+    const DB_NAME = 'GuessGameDB_V14';
     const STORE_NAME = 'imagesStore';
     const DB_VERSION = 1;
     let db;
@@ -401,6 +402,12 @@
         }
         resetHoles();
         setupInteraction();
+        
+        window.addEventListener('resize', () => {
+            if (currentIndex !== -1) {
+                refreshMask();
+            }
+        });
     };
 
     function toggleSidebar() {
@@ -469,7 +476,6 @@
             if (img.scale === 1 && img.posX === 0 && img.posY === 0) {
                 const ratioW = innerW / imgLayer.naturalWidth;
                 const ratioH = innerH / imgLayer.naturalHeight;
-                // 使用正好滿版邏輯
                 img.scale = Math.min(ratioW, ratioH);
             }
             imgLayer.style.display = 'block';
@@ -598,10 +604,12 @@
             while (attempts < 800) {
                 const x = Math.random() * (cw - size); 
                 const y = Math.random() * (ch - size);
+                
                 const overlap = holeData.some(h => {
                     const dist = Math.sqrt(Math.pow(x - h.x, 2) + Math.pow(y - h.y, 2));
                     return dist < size; 
                 });
+
                 if (!overlap) { addHole(i + 1, x, y, size, shape); break; }
                 attempts++;
             }
