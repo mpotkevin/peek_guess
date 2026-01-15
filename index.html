@@ -15,65 +15,155 @@
             --text-main: #2c3e50;
             --text-light: #7f8c8d;
             --mask-color: #e67e22; 
+            --sidebar-width: 200px;
+            --sidebar-collapsed-width: 70px;
         }
 
         * { box-sizing: border-box; touch-action: manipulation; font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; }
 
         body {
             margin: 0; padding: 0; background-color: var(--bg-warm);
-            color: var(--text-main); display: flex; flex-direction: column; align-items: center; 
-            min-height: 100vh; overflow-x: hidden;
+            color: var(--text-main); display: flex; flex-direction: row; 
+            min-height: 100vh; height: 100vh; overflow: hidden;
         }
 
-        header {
-            width: 100%; background: var(--panel-white); color: var(--primary-action);
-            padding: 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            border-bottom: 2px solid var(--border-color);
-            transition: all 0.3s ease;
-            z-index: 100;
-        }
-
-        .controls-hidden header { transform: translateY(-100%); margin-bottom: -45px; opacity: 0; pointer-events: none; }
-
-        h1 { margin: 0; font-size: 22px; letter-spacing: 2px; font-weight: 900; }
-
-        /* 遊戲區域核心設定：固定 4:3 比例 */
-        .game-wrapper {
-            width: 95%; 
-            max-width: 800px; 
-            margin: 15px auto; 
+        /* 左側導覽列 */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--panel-white);
+            border-right: 2px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
-            transition: all 0.3s ease-in-out;
-            z-index: 10;
+            z-index: 100;
+            flex-shrink: 0;
+            height: 100vh;
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed-width);
+            padding: 15px 10px;
+        }
+
+        .sidebar.collapsed .sidebar-header h1,
+        .sidebar.collapsed .btn span {
+            display: none;
+        }
+
+        .sidebar-header { margin-bottom: 25px; text-align: center; height: 30px; }
+        .sidebar-header h1 { margin: 0; font-size: 20px; color: var(--primary-action); letter-spacing: 1px; white-space: nowrap; }
+
+        /* 左側收拉按鈕 */
+        .collapse-btn {
+            background: var(--secondary-action);
+            color: white;
+            border: none;
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            position: absolute;
+            right: -14px; top: 15px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 110;
+        }
+
+        .nav-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+
+        /* 按鈕樣式 */
+        .btn {
+            border: 2px solid var(--border-color); border-radius: 12px; cursor: pointer;
+            font-weight: bold; transition: all 0.2s ease;
+            display: inline-flex; align-items: center; justify-content: flex-start;
+            gap: 12px; text-align: left; outline: none;
+            min-height: 48px; font-size: 15px; 
+            background-color: #ffffff; color: var(--text-light);
+            width: 100%;
+            overflow: hidden;
+            padding: 0 15px;
+        }
+        
+        .sidebar.collapsed .btn { justify-content: center; padding: 0; }
+        .btn i { font-style: normal; font-size: 18px; flex-shrink: 0; }
+        .btn:active { transform: scale(0.96); opacity: 0.9; }
+        .btn:hover { background-color: #f8f9fa; color: var(--text-main); border-color: #d1d8e0; }
+
+        .btn-active {
+            background-color: var(--primary-action) !important;
+            color: #ffffff !important;
+            border-color: var(--primary-action) !important;
+        }
+
+        /* 右側主區域 */
+        .main-content {
+            flex-grow: 1;
+            height: 100vh;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
             align-items: center;
+            padding: 20px 15px 40px 15px;
+            transition: all 0.3s ease;
+            position: relative;
         }
 
+        .game-wrapper {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* 遊戲視窗 4:3 */
         .game-view {
             width: 100%; 
             aspect-ratio: 4 / 3; 
             position: relative;
-            background: #000000; /* 背景黑色，讓非 4:3 圖片出現黑邊 */
-            border-radius: 20px; overflow: hidden;
+            background: #000000;
+            border-radius: 24px; overflow: hidden;
             box-shadow: 0 10px 40px rgba(0,0,0,0.12); 
             display: flex; justify-content: center; align-items: center;
-            border: 6px solid var(--panel-white);
-            max-height: 70vh; 
+            border: 8px solid var(--panel-white);
+            max-height: 75vh; 
+            flex-shrink: 0;
+        }
+
+        /* 畫面左上議題標 */
+        #question-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 50;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-weight: 900;
+            font-size: 16px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            pointer-events: none;
+            display: none; /* 有題目時才顯示 */
+        }
+
+        /* 智慧色彩：淺色模式下的題標 */
+        .dark-text #question-badge {
+            color: #000000;
+            background-color: rgba(0, 0, 0, 0.1);
+            border-color: rgba(0, 0, 0, 0.2);
         }
 
         #image-layer {
-            position: absolute; 
-            user-select: none; 
-            z-index: 1;
+            position: absolute; user-select: none; z-index: 1;
             transition: transform 0.1s ease-out, opacity 0.4s ease;
-            display: none; 
-            opacity: 0;
+            display: none; opacity: 0;
             pointer-events: none; 
-            /* 移除預設寬高限制，由 JS 計算 */
         }
         
-        /* 調整階段允許拖曳 */
         .preview-active #image-layer { pointer-events: auto; cursor: move; }
 
         #mask-svg {
@@ -91,11 +181,10 @@
             color: #ffffff; font-weight: bold; font-size: 28px; cursor: pointer;
             transition: width 0.1s, height 0.1s, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            border: 2px dashed rgba(255,255,255,0.6);
+            border: 3px dashed rgba(255,255,255,0.6);
             box-sizing: border-box;
         }
 
-        /* 智慧色彩：淺色遮罩或設定模式下顯示深色文字 */
         .dark-text .hole-trigger,
         .preview-active .hole-trigger {
             color: #000000 !important; text-shadow: none !important;
@@ -105,7 +194,6 @@
         .hole-trigger:hover { border-color: currentColor; background-color: rgba(255,255,255,0.1); transform: scale(1.05); }
         .hole-trigger.revealed { opacity: 0; pointer-events: none; transform: scale(1.2); }
 
-        /* 設定模式樣式：隱藏遮罩 */
         .preview-active #mask-svg { opacity: 0 !important; }
         .preview-active .hole-trigger { 
             border-style: solid; border-color: var(--primary-action) !important; 
@@ -113,214 +201,244 @@
             background-color: rgba(211, 84, 0, 0.1);
         }
 
-        /* 控制面板佈局 */
-        .control-panel {
-            width: 95%; max-width: 800px; padding: 20px;
-            background: var(--panel-white); border-radius: 20px; margin-bottom: 15px;
+        /* 下方設定面板 */
+        .bottom-settings {
+            width: 100%;
+            background-color: var(--panel-white);
+            border-radius: 20px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
             overflow: hidden;
+            border: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            flex-shrink: 0;
         }
 
-        .controls-hidden .control-panel { height: 0; padding: 0; margin-bottom: 0; opacity: 0; pointer-events: none; }
-        .controls-hidden footer { opacity: 0; }
+        .settings-header {
+            padding: 14px 20px;
+            background-color: #fcfcfc;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 800;
+            color: var(--text-main);
+            font-size: 15px;
+        }
+        .settings-header:hover { background-color: #f8f9fa; }
 
-        .action-grid { display: flex; flex-direction: column; gap: 10px; width: 100%; }
-        .action-row { display: flex; gap: 10px; width: 100%; justify-content: center; }
-        .action-row > .btn { flex: 1; }
-
-        .game-toolbar {
-            width: 100%; max-width: 800px; 
-            background: transparent;
-            margin-top: 5px;
+        .settings-content {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            transition: all 0.3s ease;
+            max-height: 1000px;
+            overflow: hidden;
+            opacity: 1;
         }
 
-        /* 按鈕規範 - 一致性大小與米白風格 */
-        .btn {
-            border: 2px solid var(--border-color); border-radius: 12px; cursor: pointer;
-            font-weight: bold; transition: all 0.2s ease;
-            display: inline-flex; align-items: center; justify-content: center;
-            gap: 6px; text-align: center; outline: none;
-            min-height: 46px; font-size: 15px; padding: 0 8px;
-            background-color: #ffffff; color: var(--text-light);
-        }
-        .btn:active { transform: scale(0.96); opacity: 0.9; }
-        .btn:hover { background-color: #f8f9fa; color: var(--text-main); border-color: #d1d8e0; }
-
-        .btn-active {
-            background-color: var(--primary-action) !important;
-            color: #ffffff !important;
-            border-color: var(--primary-action) !important;
+        .bottom-settings.collapsed .settings-content {
+            max-height: 0;
+            padding: 0 20px;
+            opacity: 0;
+            pointer-events: none;
         }
 
-        .btn-small { min-height: 38px; font-size: 14px; border-radius: 10px; } 
-
-        .toggle-ui-btn {
-            position: fixed; right: 15px; bottom: 15px; z-index: 10002;
-            width: 50px; height: 50px; border-radius: 50%;
-            background: var(--secondary-action); color: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            font-size: 20px; border: none; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
+        .persistent-footer {
+            padding: 12px 20px;
+            background-color: #ffffff;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-light);
+        }
+        .persistent-footer a {
+            color: var(--primary-action);
+            text-decoration: none;
+            font-weight: bold;
         }
 
-        .control-group { padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
-        .control-group:last-child { border-bottom: none; }
-        .label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 800; font-size: 16px; color: var(--text-main); }
+        .control-group { display: flex; flex-direction: column; gap: 10px; }
+        .label-row { font-weight: 800; font-size: 14px; color: var(--text-main); margin-bottom: 5px; }
 
+        /* 圖片清單題標 */
         .image-list {
-            display: flex; flex-direction: column; gap: 6px; margin: 10px 0;
-            max-height: 120px; overflow-y: auto; padding: 8px; background: #fdfdfd; border-radius: 14px; border: 1px solid var(--border-color);
+            display: flex; flex-direction: column; gap: 6px;
+            max-height: 150px; overflow-y: auto; padding: 10px; background: #fdfdfd; border-radius: 12px; border: 1px solid var(--border-color);
         }
         .image-item {
             display: flex; align-items: center; padding: 8px; background: white;
             border-radius: 10px; cursor: pointer; border: 2px solid transparent; transition: 0.2s;
+            font-size: 13px;
         }
         .image-item.active { border-color: var(--primary-action); background: #fffcf0; }
-        .item-num { width: 26px; height: 26px; background: var(--primary-action); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 10px; font-size: 12px; font-weight: bold; }
-        .thumb { width: 45px; height: 35px; object-fit: cover; border-radius: 4px; margin-right: 10px; }
-
-        .pattern-options { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-        .pattern-btn { width: 36px; height: 36px; border-radius: 50%; border: 3px solid #fff; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.1); background-size: cover; background-position: center; }
-        .pattern-btn.active { border-color: var(--primary-action); transform: scale(1.1); }
-        .btn-add-mask { font-size: 18px; color: var(--text-light); background: #eee; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; }
-
-        select { padding: 8px; font-size: 15px; border-radius: 10px; border: 1px solid var(--border-color); background: #fff; }
-        input[type="range"] { width: 100%; height: 10px; background: #eee; border-radius: 4px; cursor: pointer; }
-
-        footer {
-            margin: 10px 0 30px 0; text-align: center; color: var(--text-light); font-size: 14px; width: 100%; transition: opacity 0.3s;
+        
+        .list-num {
+            width: 22px; height: 22px; background: var(--border-color); color: var(--text-light);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            font-size: 11px; font-weight: 900; margin-right: 8px; flex-shrink: 0;
         }
-        footer a { color: var(--primary-action); text-decoration: none; font-weight: bold; }
+        .image-item.active .list-num { background: var(--primary-action); color: #fff; }
+
+        .thumb { width: 40px; height: 30px; object-fit: cover; border-radius: 4px; margin-right: 10px; }
+
+        .pattern-options { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 5px; }
+        .pattern-btn { width: 36px; height: 36px; border-radius: 50%; border: 3px solid #fff; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-size: cover; background-position: center; }
+        .pattern-btn.active { border-color: var(--primary-action); transform: scale(1.1); }
+        .btn-add-mask { font-size: 20px; color: var(--text-light); background: #eee; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; }
+
+        select { width: 100%; padding: 10px; font-size: 14px; border-radius: 10px; border: 1px solid var(--border-color); background: #fff; outline: none; }
+        input[type="range"] { width: 100%; cursor: pointer; }
 
         .hide-mask #mask-svg, .hide-mask #interaction-layer { opacity: 0 !important; pointer-events: none !important; }
 
-        @media (max-width: 600px) {
-            .btn { font-size: 13px; min-height: 42px; border-radius: 10px; gap: 4px; }
-            .action-row { gap: 6px; }
-            .game-wrapper { margin: 10px auto; }
+        @media (max-width: 768px) {
+            .settings-content { grid-template-columns: 1fr; }
+            .sidebar.collapsed { width: 60px; }
         }
     </style>
 </head>
 <body class="preview-active"> <!-- 初始為設定模式 -->
 
-<header id="page-header">
-    <h1>洞物猜猜看</h1>
-</header>
-
-<button class="toggle-ui-btn" id="toggle-ui" title="展開/收起設定" onclick="toggleUIVisibility()">🛠️</button>
-
-<div class="game-wrapper">
-    <!-- 遊戲畫布與遮罩 -->
-    <div class="game-view" id="game-canvas">
-        <img id="image-layer" src="" alt="底圖" draggable="false">
-        
-        <svg id="mask-svg">
-            <defs>
-                <radialGradient id="grad-warm" cx="50%" cy="50%" r="70%">
-                    <stop offset="0%" style="stop-color:#f39c12; stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#d35400; stop-opacity:1" />
-                </radialGradient>
-                <pattern id="pattern-wood" width="100" height="100" patternUnits="userSpaceOnUse">
-                    <rect width="100" height="100" fill="#a67c52" />
-                    <path d="M0 20 Q 50 10 100 20 M0 50 Q 50 60 100 50 M0 80 Q 50 70 100 80" stroke="#8d6641" fill="none" stroke-width="2" />
-                </pattern>
-                <pattern id="pattern-flowers" width="60" height="60" patternUnits="userSpaceOnUse">
-                    <rect width="60" height="60" fill="#faf3e0" />
-                    <text x="10" y="30" font-size="20" opacity="0.4">✿</text>
-                    <text x="40" y="50" font-size="15" opacity="0.3">❀</text>
-                </pattern>
-                <pattern id="pattern-linen" width="10" height="10" patternUnits="userSpaceOnUse">
-                    <rect width="10" height="10" fill="#f5f5f5" />
-                    <path d="M 10 0 L 10 10 M 0 10 L 10 10" stroke="#e0e0e0" stroke-width="0.5" />
-                </pattern>
-                <pattern id="pattern-custom" width="100%" height="100%" patternUnits="objectBoundingBox">
-                    <image id="custom-mask-img" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" xlink:href="" />
-                </pattern>
-                <mask id="hole-mask">
-                    <rect width="100%" height="100%" fill="white" />
-                    <g id="mask-holes-group"></g>
-                </mask>
-            </defs>
-            <rect id="mask-rect" width="100%" height="100%" fill="url(#grad-warm)" mask="url(#hole-mask)" />
-        </svg>
-
-        <div id="interaction-layer"></div>
+<div class="sidebar" id="sidebar">
+    <button class="collapse-btn" onclick="toggleSidebar()">⬅️</button>
+    
+    <div class="sidebar-header">
+        <h1>洞物猜猜看</h1>
     </div>
 
-    <!-- 核心操作按鈕工具列 -->
-    <div class="game-toolbar">
-        <div class="action-grid">
-            <div class="action-row">
-                <button class="btn btn-outline" onclick="goToPrevImage()">⏮️ 上一題</button>
-                <button class="btn btn-outline" onclick="toggleAnswerRevealed()">📢 公佈答案</button>
-                <button class="btn btn-outline" onclick="goToNextImage()">⏭️ 下一題</button>
+    <div class="nav-group">
+        <!-- 核心操作按鈕：更新文字「到上一題」與「到下一題」 -->
+        <button class="btn btn-outline" id="btn-start" onclick="toggleGameStart()">
+            <i>🎮</i> <span>開始遊戲</span>
+        </button>
+        <button class="btn btn-outline" onclick="toggleAnswerRevealed()">
+            <i>👁️</i> <span>公佈答案</span>
+        </button>
+        <button class="btn btn-outline" onclick="goToPrevImage()">
+            <i>⏮️</i> <span>到上一題</span>
+        </button>
+        <button class="btn btn-outline" onclick="goToNextImage()">
+            <i>⏭️</i> <span>到下一題</span>
+        </button>
+        <button class="btn btn-outline" onclick="undoHole()">
+            <i>↩️</i> <span>回上一步</span>
+        </button>
+        <button class="btn btn-outline" onclick="resetHoles()">
+            <i>🔄</i> <span>重新分佈</span>
+        </button>
+    </div>
+</div>
+
+<div class="main-content" id="scroll-content">
+    <div class="game-wrapper" id="game-wrapper">
+        <!-- 照片遮罩區 4:3 -->
+        <div class="game-view" id="game-canvas">
+            <!-- 畫面左上議題標 -->
+            <div id="question-badge"></div>
+
+            <img id="image-layer" src="" alt="底圖" draggable="false">
+            
+            <svg id="mask-svg">
+                <defs>
+                    <radialGradient id="grad-warm" cx="50%" cy="50%" r="70%">
+                        <stop offset="0%" style="stop-color:#f39c12; stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#d35400; stop-opacity:1" />
+                    </radialGradient>
+                    <pattern id="pattern-wood" width="100" height="100" patternUnits="userSpaceOnUse">
+                        <rect width="100" height="100" fill="#a67c52" />
+                        <path d="M0 20 Q 50 10 100 20 M0 50 Q 50 60 100 50 M0 80 Q 50 70 100 80" stroke="#8d6641" fill="none" stroke-width="2" />
+                    </pattern>
+                    <pattern id="pattern-flowers" width="60" height="60" patternUnits="userSpaceOnUse">
+                        <rect width="60" height="60" fill="#faf3e0" />
+                        <text x="10" y="30" font-size="20" opacity="0.4">✿</text>
+                        <text x="40" y="50" font-size="15" opacity="0.3">❀</text>
+                    </pattern>
+                    <pattern id="pattern-linen" width="10" height="10" patternUnits="userSpaceOnUse">
+                        <rect width="10" height="10" fill="#f5f5f5" />
+                        <path d="M 10 0 L 10 10 M 0 10 L 10 10" stroke="#e0e0e0" stroke-width="0.5" />
+                    </pattern>
+                    <pattern id="pattern-custom" width="100%" height="100%" patternUnits="objectBoundingBox">
+                        <image id="custom-mask-img" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" xlink:href="" />
+                    </pattern>
+                    <mask id="hole-mask">
+                        <rect width="100%" height="100%" fill="white" />
+                        <g id="mask-holes-group"></g>
+                    </mask>
+                </defs>
+                <rect id="mask-rect" width="100%" height="100%" fill="url(#grad-warm)" mask="url(#hole-mask)" />
+            </svg>
+
+            <div id="interaction-layer"></div>
+        </div>
+
+        <!-- 下方調整面板 -->
+        <div class="bottom-settings" id="bottom-settings">
+            <div class="settings-header" onclick="toggleBottomSettings()">
+                <span>🛠️ 參數設定區 (點擊展開/收起)</span>
+                <span id="settings-arrow">▼</span>
             </div>
-            <div class="action-row">
-                <button class="btn btn-outline" onclick="resetHoles()">🔄 重新分佈</button>
-                <button class="btn btn-outline" onclick="undoHole()">↩️ 回上一步</button>
-                <button class="btn btn-outline" onclick="revealAll()">👁️ 全部戳開</button>
+            
+            <div class="settings-content" id="settings-content">
+                <div class="control-group">
+                    <span class="label-row">遮罩樣式</span>
+                    <div class="pattern-options">
+                        <div class="pattern-btn active" style="background: #e67e22;" onclick="changeMask('warm', this)"></div>
+                        <div class="pattern-btn" style="background: #a67c52;" onclick="changeMask('wood', this)"></div>
+                        <div class="pattern-btn" style="background: #faf3e0; border: 1px solid #ddd;" onclick="changeMask('flowers', this)"></div>
+                        <div class="pattern-btn" style="background: #f5f5f5; border: 1px solid #ddd;" onclick="changeMask('linen', this)"></div>
+                        <div class="pattern-btn btn-add-mask" id="btn-custom-mask" title="自定義遮罩" onclick="document.getElementById('mask-upload-input').click()">＋</div>
+                    </div>
+                    
+                    <span class="label-row">題目清單</span>
+                    <button class="btn btn-outline" style="min-height:36px; font-size:13px;" onclick="document.getElementById('file-input').click()">➕ 上傳新題目</button>
+                    <input type="file" id="file-input" accept="image/*" multiple style="display:none">
+                    <input type="file" id="mask-upload-input" accept="image/*" style="display:none" onchange="uploadCustomMask(this)">
+                    <div class="image-list" id="image-list-ui"></div>
+                </div>
+
+                <div class="control-group">
+                    <span class="label-row">洞口數量與形狀</span>
+                    <div style="display:flex; gap:10px;">
+                        <select id="hole-count" onchange="resetHoles()">
+                            <option value="4">4個</option><option value="6">6個</option><option value="8" selected>8個</option>
+                            <option value="12">12個</option><option value="16">16個</option><option value="24">24個</option>
+                        </select>
+                        <select id="hole-shape" onchange="resetHoles()">
+                            <option value="circle">圓形</option>
+                            <option value="square">方形</option>
+                        </select>
+                    </div>
+                    
+                    <span class="label-row">排列方式</span>
+                    <select id="hole-layout" onchange="resetHoles()">
+                        <option value="random">隨機分散</option>
+                        <option value="grid">整齊網格</option>
+                    </select>
+
+                    <span class="label-row">洞口大小 (<span id="size-val">120px</span>)</span>
+                    <input type="range" id="size-slider" min="50" max="250" value="120" oninput="updateSizePreview(this.value)">
+                    
+                    <div id="current-adjust" style="display:none; margin-top:5px;">
+                        <span class="label-row">底圖微調縮放 (<span id="scale-val">100%</span>)</span>
+                        <input type="range" id="scale-slider" min="10" max="300" value="100">
+                    </div>
+                </div>
             </div>
-            <div class="action-row">
-                <button class="btn btn-outline" id="btn-start" onclick="toggleGameStart()" style="width: 100%;">🎮 開始遊戲</button>
+
+            <!-- 持久顯示的署名 -->
+            <div class="persistent-footer">
+                設計：<a href="https://www.facebook.com/kevin.pptgame" target="_blank">職能治療師 - 鄭凱文</a>
             </div>
         </div>
     </div>
 </div>
-
-<!-- 詳細設定面板 -->
-<div class="control-panel" id="main-controls">
-    <div class="control-group">
-        <div class="label-row">
-            <span>1. 圖片清單與遮罩樣式</span>
-            <div class="pattern-options">
-                <div class="pattern-btn active" style="background: #e67e22;" onclick="changeMask('warm', this)"></div>
-                <div class="pattern-btn" style="background: #a67c52;" onclick="changeMask('wood', this)"></div>
-                <div class="pattern-btn" style="background: #faf3e0; border: 1px solid #ddd;" onclick="changeMask('flowers', this)"></div>
-                <div class="pattern-btn" style="background: #f5f5f5; border: 1px solid #ddd;" onclick="changeMask('linen', this)"></div>
-                <div class="pattern-btn btn-add-mask" id="btn-custom-mask" title="上傳自定義遮罩" onclick="document.getElementById('mask-upload-input').click()">＋</div>
-            </div>
-        </div>
-        
-        <div style="display: flex; gap: 10px;">
-            <button class="btn btn-outline btn-small" style="flex:1; background:#eee; color:#34495e;" onclick="document.getElementById('file-input').click()">➕ 上傳題目圖</button>
-            <button class="btn btn-outline btn-small" style="flex:1;" onclick="clearAllData()">🗑️ 清空所有</button>
-            <input type="file" id="file-input" accept="image/*" multiple style="display:none">
-            <input type="file" id="mask-upload-input" accept="image/*" style="display:none" onchange="uploadCustomMask(this)">
-        </div>
-
-        <div class="image-list" id="image-list-ui"></div>
-
-        <div id="current-adjust" style="display:none; padding: 10px; background: #fdfdfd; border-radius: 12px; border: 1px solid #eee;">
-            <label class="label-row">🔍 微調圖片大小: <span id="scale-val">100%</span></label>
-            <input type="range" id="scale-slider" min="10" max="300" value="100">
-        </div>
-    </div>
-
-    <div class="control-group">
-        <div class="label-row">2. 洞口參數設定</div>
-        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
-            <div>數量: <select id="hole-count" onchange="resetHoles()"><option value="4">4</option><option value="6">6</option><option value="8" selected>8</option><option value="12">12</option><option value="16">16</option><option value="24">24</option></select></div>
-            <div>形狀: <select id="hole-shape" onchange="resetHoles()"><option value="circle">圓形</option><option value="square">方形</option></select></div>
-            <div>排列: <select id="hole-layout" onchange="resetHoles()"><option value="random">隨機分散</option><option value="grid">整齊網格</option></select></div>
-        </div>
-        <div style="margin-top: 10px;">
-            <label class="label-row">🕳️ 洞口大小: <span id="size-val">120px</span></label>
-            <input type="range" id="size-slider" min="50" max="250" value="120" oninput="updateSizePreview(this.value)">
-        </div>
-    </div>
-</div>
-
-<footer>
-    設計：<a href="https://www.facebook.com/kevin.pptgame" target="_blank">職能治療師 - 鄭凱文</a>
-</footer>
 
 <script>
     // --- IndexedDB ---
-    const DB_NAME = 'GuessGameDB_V5';
+    const DB_NAME = 'GuessGameDB_V8';
     const STORE_NAME = 'imagesStore';
     const DB_VERSION = 1;
     let db;
@@ -359,15 +477,16 @@
         });
     }
 
-    // --- 變數管理 ---
+    // --- 變數 ---
     let images = []; 
     let currentIndex = -1;
-    let isPreview = true; // 初始為設定模式
+    let isPreview = true; 
     let isAnswerRevealed = false;
     let isDraggingImg = false;
     let startX, startY;
     let holeData = []; 
-    let uiVisible = true;
+    let sidebarCollapsed = false;
+    let bottomSettingsCollapsed = false;
 
     const canvas = document.getElementById('game-canvas');
     const imgLayer = document.getElementById('image-layer');
@@ -378,6 +497,7 @@
     const scaleSlider = document.getElementById('scale-slider');
     const sizeSlider = document.getElementById('size-slider');
     const btnStart = document.getElementById('btn-start');
+    const qBadge = document.getElementById('question-badge');
 
     window.onload = async () => {
         try {
@@ -395,98 +515,57 @@
         setupInteraction();
     };
 
-    // --- 核心：開始遊戲與設定模式切換 ---
+    function toggleSidebar() {
+        sidebarCollapsed = !sidebarCollapsed;
+        const sb = document.getElementById('sidebar');
+        const btn = document.querySelector('.collapse-btn');
+        if (sidebarCollapsed) {
+            sb.classList.add('collapsed');
+            btn.innerText = '➡️';
+        } else {
+            sb.classList.remove('collapsed');
+            btn.innerText = '⬅️';
+        }
+        setTimeout(loadCurrent, 300);
+    }
+
+    function toggleBottomSettings() {
+        bottomSettingsCollapsed = !bottomSettingsCollapsed;
+        const panel = document.getElementById('bottom-settings');
+        const arrow = document.getElementById('settings-arrow');
+        if (bottomSettingsCollapsed) {
+            panel.classList.add('collapsed');
+            arrow.innerText = '▲';
+        } else {
+            panel.classList.remove('collapsed');
+            arrow.innerText = '▼';
+        }
+    }
+
     function toggleGameStart() {
         isPreview = !isPreview;
         if (!isPreview) {
             document.body.classList.remove('preview-active');
             btnStart.classList.add('btn-active');
-            btnStart.innerText = '🛠️ 返回設定';
+            btnStart.innerHTML = '<i>🛠️</i> <span>返回設定</span>';
         } else {
             document.body.classList.add('preview-active');
             btnStart.classList.remove('btn-active');
-            btnStart.innerText = '🎮 開始遊戲';
+            btnStart.innerHTML = '<i>🎮</i> <span>開始遊戲</span>';
             isAnswerRevealed = false;
             canvas.parentElement.classList.remove('hide-mask');
         }
     }
 
-    // --- 介面收摺 ---
-    function toggleUIVisibility() {
-        uiVisible = !uiVisible;
-        if (uiVisible) {
-            document.body.classList.remove('controls-hidden');
-            document.getElementById('toggle-ui').innerText = '🛠️';
-        } else {
-            document.body.classList.add('controls-hidden');
-            document.getElementById('toggle-ui').innerText = '📂';
-        }
-    }
-
-    // --- 即時尺寸預覽 ---
     function updateSizePreview(value) {
         document.getElementById('size-val').innerText = value + 'px';
         const newSize = parseInt(value);
         holeData.forEach(h => { h.size = newSize; });
         const triggers = document.querySelectorAll('.hole-trigger');
-        triggers.forEach(t => { t.style.width = newSize + 'px'; t.style.height = newSize + 'px'; });
-        refreshMask();
-    }
-
-    // --- 換題邏輯與自動縮放 ---
-    function goToNextImage() { if (images.length === 0) return; prepareSwitch(); currentIndex = (currentIndex + 1) % images.length; completeSwitch(); }
-    function goToPrevImage() { if (images.length === 0) return; prepareSwitch(); currentIndex = (currentIndex - 1 + images.length) % images.length; completeSwitch(); }
-
-    function prepareSwitch() {
-        imgLayer.style.opacity = '0';
-        imgLayer.style.display = 'none';
-        imgLayer.src = ''; 
-        isAnswerRevealed = false;
-        canvas.parentElement.classList.remove('hide-mask');
-    }
-
-    function completeSwitch() {
-        resetHoles(); 
-        renderList();
-        loadCurrent();
-    }
-
-    // 核心優化：自動計算縮放使圖片完全顯示在 4:3 區域內
-    function loadCurrent() {
-        if (currentIndex === -1 || !images[currentIndex]) { imgLayer.style.display = 'none'; return; }
-        const img = images[currentIndex];
-        
-        imgLayer.style.display = 'none';
-        imgLayer.style.opacity = '0';
-        imgLayer.src = img.src;
-        
-        imgLayer.onload = () => {
-            const containerRect = canvas.getBoundingClientRect();
-            const cW = containerRect.width || 800;
-            const cH = containerRect.height || 600;
-            
-            // 如果該圖片還沒有手動調整過，執行自動縮放
-            if (img.scale === 1 && img.posX === 0 && img.posY === 0) {
-                const imgW = imgLayer.naturalWidth;
-                const imgH = imgLayer.naturalHeight;
-                
-                const ratioW = cW / imgW;
-                const ratioH = cH / imgH;
-                
-                // 取較小的比例以確保整張圖都在框內 (Object-fit: contain 邏輯)
-                const fitScale = Math.min(ratioW, ratioH);
-                img.scale = fitScale;
-                img.posX = 0;
-                img.posY = 0;
-            }
-            
-            imgLayer.style.display = 'block';
-            setTimeout(() => { imgLayer.style.opacity = '1'; }, 100);
-            updateTransform();
-            scaleSlider.value = Math.round(img.scale * 100);
-            document.getElementById('scale-val').innerText = scaleSlider.value + '%';
-        };
-        
+        triggers.forEach(t => { 
+            t.style.width = newSize + 'px'; 
+            t.style.height = newSize + 'px'; 
+        });
         refreshMask();
     }
 
@@ -497,9 +576,52 @@
         else canvas.parentElement.classList.remove('hide-mask');
     }
 
+    function goToNextImage() { if (images.length === 0) return; prepareSwitch(); currentIndex = (currentIndex + 1) % images.length; completeSwitch(); }
+    function goToPrevImage() { if (images.length === 0) return; prepareSwitch(); currentIndex = (currentIndex - 1 + images.length) % images.length; completeSwitch(); }
+
+    function prepareSwitch() {
+        imgLayer.style.opacity = '0'; imgLayer.style.display = 'none'; imgLayer.src = ''; 
+        isAnswerRevealed = false; canvas.parentElement.classList.remove('hide-mask');
+    }
+
+    function completeSwitch() { resetHoles(); renderList(); loadCurrent(); }
+
+    function loadCurrent() {
+        if (currentIndex === -1 || !images[currentIndex]) { 
+            imgLayer.style.display = 'none'; 
+            qBadge.style.display = 'none';
+            return; 
+        }
+        const img = images[currentIndex];
+        
+        // 更新題號題標
+        qBadge.innerText = `第 ${currentIndex + 1} 題`;
+        qBadge.style.display = 'block';
+
+        imgLayer.style.display = 'none'; imgLayer.style.opacity = '0'; imgLayer.src = img.src;
+        
+        imgLayer.onload = () => {
+            const containerRect = canvas.getBoundingClientRect();
+            const cW = containerRect.width || 800;
+            const cH = containerRect.height || 600;
+            
+            if (img.scale === 1 && img.posX === 0 && img.posY === 0) {
+                const ratioW = cW / imgLayer.naturalWidth;
+                const ratioH = cH / imgLayer.naturalHeight;
+                img.scale = Math.min(ratioW, ratioH);
+            }
+            
+            imgLayer.style.display = 'block';
+            setTimeout(() => { imgLayer.style.opacity = '1'; }, 100);
+            updateTransform();
+            scaleSlider.value = Math.round(img.scale * 100);
+            document.getElementById('scale-val').innerText = scaleSlider.value + '%';
+        };
+        refreshMask();
+    }
+
     function changeMask(type, btn) {
         let fill = '';
-        const isLight = (type === 'flowers' || type === 'linen' || type === 'custom');
         if (type === 'warm') fill = 'url(#grad-warm)';
         else if (type === 'wood') fill = 'url(#pattern-wood)';
         else if (type === 'flowers') fill = 'url(#pattern-flowers)';
@@ -510,6 +632,7 @@
         document.querySelectorAll('.pattern-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
+        const isLight = (type === 'flowers' || type === 'linen' || type === 'custom');
         if (isLight) interactionLayer.classList.add('dark-text'); 
         else interactionLayer.classList.remove('dark-text'); 
     }
@@ -537,10 +660,8 @@
             reader.onload = async (ev) => {
                 images.push({
                     id: 'i_' + Date.now() + Math.random(),
-                    src: ev.target.result,
-                    name: file.name,
-                    scale: 1, posX: 0, posY: 0,
-                    revealedIds: []
+                    src: ev.target.result, name: file.name,
+                    scale: 1, posX: 0, posY: 0, revealedIds: []
                 });
                 loaded++;
                 if (loaded === files.length) {
@@ -559,7 +680,12 @@
         images.forEach((img, idx) => {
             const item = document.createElement('div');
             item.className = `image-item ${idx === currentIndex ? 'active' : ''}`;
-            item.innerHTML = `<div class="item-num">${idx + 1}</div><img src="${img.src}" class="thumb"><div style="flex:1; font-weight:600; font-size:14px;">${img.name.substring(0,15)}...</div><button class="btn btn-outline btn-small" style="padding:0 10px; min-height:30px;" onclick="deleteImg(event, ${idx})">✕</button>`;
+            item.innerHTML = `
+                <div class="list-num">${idx + 1}</div>
+                <img src="${img.src}" class="thumb">
+                <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${img.name.substring(0,10)}...</div>
+                <button class="btn" style="min-height:24px; width:auto; padding:2px 6px; border-radius:6px; font-size:10px; border-color:#eee;" onclick="deleteImg(event, ${idx})">✕</button>
+            `;
             item.onclick = () => { currentIndex = idx; isAnswerRevealed = false; canvas.parentElement.classList.remove('hide-mask'); renderList(); loadCurrent(); };
             listUI.appendChild(item);
         });
@@ -576,38 +702,35 @@
         if (currentIndex === -1) return;
         images[currentIndex].scale = e.target.value / 100;
         document.getElementById('scale-val').innerText = e.target.value + '%';
-        updateTransform();
-        await save();
+        updateTransform(); await save();
     };
 
     function resetHoles() {
-        interactionLayer.innerHTML = '';
-        maskHolesGroup.innerHTML = '';
-        holeData = [];
-        const count = parseInt(document.getElementById('hole-count').value);
+        const countEl = document.getElementById('hole-count');
+        const shapeEl = document.getElementById('hole-shape');
+        const layoutEl = document.getElementById('hole-layout');
+        if (!countEl || !shapeEl || !layoutEl) return;
+
+        interactionLayer.innerHTML = ''; maskHolesGroup.innerHTML = ''; holeData = [];
+        const count = parseInt(countEl.value);
         const size = parseInt(sizeSlider.value);
-        const shape = document.getElementById('hole-shape').value;
-        const layout = document.getElementById('hole-layout').value;
+        const shape = shapeEl.value;
+        const layout = layoutEl.value;
         const rect = canvas.getBoundingClientRect();
-        const cw = rect.width || 800;
-        const ch = rect.height || 600;
+        const cw = rect.width || 800; const ch = rect.height || 600;
 
         if (layout === 'grid') {
-            const cols = Math.ceil(Math.sqrt(count));
-            const rows = Math.ceil(count / cols);
-            const cellW = cw / cols;
-            const cellH = ch / rows;
+            const cols = Math.ceil(Math.sqrt(count)); const rows = Math.ceil(count / cols);
+            const cellW = cw / cols; const cellH = ch / rows;
             for (let i = 0; i < count; i++) {
-                const r = Math.floor(i / cols);
-                const c = i % cols;
-                addHole(i + 1, c * cellW + (cellW - size) / 2, r * cellH + (cellH - size) / 2, size, shape);
+                const r = Math.floor(i / cols); const c = i % cols;
+                addHole(i + 1, c * cellW + (cellW - size) / 2, r * ch + (ch - size) / 2, size, shape);
             }
         } else {
             for (let i = 0; i < count; i++) {
                 let attempts = 0;
                 while (attempts < 200) {
-                    const x = Math.random() * (cw - size);
-                    const y = Math.random() * (ch - size);
+                    const x = Math.random() * (cw - size); const y = Math.random() * (ch - size);
                     const overlap = holeData.some(h => Math.sqrt(Math.pow(x - h.x, 2) + Math.pow(y - h.y, 2)) < size);
                     if (!overlap) { addHole(i + 1, x, y, size, shape); break; }
                     attempts++;
@@ -618,15 +741,11 @@
     }
 
     function addHole(num, x, y, size, shape) {
-        const id = `h-${num}`;
-        holeData.push({id, x, y, size, shape});
+        const id = `h-${num}`; holeData.push({id, x, y, size, shape});
         const trigger = document.createElement('div');
-        trigger.className = 'hole-trigger';
-        trigger.id = `trigger-${id}`;
-        trigger.innerText = num;
+        trigger.className = 'hole-trigger'; trigger.id = `trigger-${id}`; trigger.innerText = num;
         trigger.style.width = trigger.style.height = size + 'px';
-        trigger.style.left = x + 'px';
-        trigger.style.top = y + 'px';
+        trigger.style.left = x + 'px'; trigger.style.top = y + 'px';
         trigger.style.borderRadius = shape === 'circle' ? '50%' : '12px';
         trigger.onclick = () => poke(id);
         interactionLayer.appendChild(trigger);
@@ -659,25 +778,10 @@
     }
 
     async function undoHole() { if (currentIndex === -1) return; images[currentIndex].revealedIds.pop(); refreshMask(); await save(); }
-    async function revealAll() { if (currentIndex === -1) return; images[currentIndex].revealedIds = holeData.map(h => h.id); refreshMask(); await save(); }
 
     function setupInteraction() {
-        const start = (e) => { 
-            if (currentIndex === -1 || !isPreview) return; 
-            isDraggingImg = true; 
-            const cx = e.touches ? e.touches[0].clientX : e.clientX; 
-            const cy = e.touches ? e.touches[0].clientY : e.clientY; 
-            startX = cx - images[currentIndex].posX; 
-            startY = cy - images[currentIndex].posY; 
-        };
-        const move = (e) => { 
-            if (!isDraggingImg) return; 
-            const cx = e.touches ? e.touches[0].clientX : e.clientX; 
-            const cy = e.touches ? e.touches[0].clientY : e.clientY; 
-            images[currentIndex].posX = cx - startX; 
-            images[currentIndex].posY = cy - startY; 
-            updateTransform(); 
-        };
+        const start = (e) => { if (currentIndex === -1 || !isPreview) return; isDraggingImg = true; const cx = e.touches ? e.touches[0].clientX : e.clientX; const cy = e.touches ? e.touches[0].clientY : e.clientY; startX = cx - images[currentIndex].posX; startY = cy - images[currentIndex].posY; };
+        const move = (e) => { if (!isDraggingImg) return; const cx = e.touches ? e.touches[0].clientX : e.clientX; const cy = e.touches ? e.touches[0].clientY : e.clientY; images[currentIndex].posX = cx - startX; images[currentIndex].posY = cy - startY; updateTransform(); };
         const end = async () => { if(isDraggingImg) { isDraggingImg = false; await save(); } };
         canvas.addEventListener('mousedown', start); window.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
         canvas.addEventListener('touchstart', start, {passive: false}); window.addEventListener('touchmove', move, {passive: false}); window.addEventListener('touchend', end);
