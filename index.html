@@ -90,14 +90,15 @@
             padding: 20px 15px 40px 15px; transition: all 0.3s ease; position: relative;
         }
 
+        /* 遊戲包裹容器：寬度隨比例連動 */
         .game-wrapper {
-            width: 95%; max-width: 750px; 
+            width: 95%; max-width: 750px; /* 預設 4:3 寬度 */
             display: flex; flex-direction: column; align-items: center;
             gap: 20px; transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        .game-wrapper.wide-mode { max-width: 1000px; } /* 16:9 寬度 */
 
-        .game-wrapper.wide-mode { max-width: 1000px; }
-
+        /* 遊戲視窗：精確比例 */
         .game-view {
             width: 100%; position: relative; background: #000000;
             border-radius: 24px; overflow: hidden;
@@ -195,27 +196,29 @@
         .persistent-footer a { color: var(--primary-action); text-decoration: none; font-weight: bold; }
 
         .control-group { display: flex; flex-direction: column; gap: 10px; }
-        /* 一般標題：分散兩端 */
-        .label-row { font-weight: 800; font-size: 14px; color: var(--text-main); margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
-        /* 簡單標題：文字靠攏 */
         .label-row-simple { font-weight: 800; font-size: 14px; color: var(--text-main); margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
 
         .image-list {
             display: flex; flex-direction: column; gap: 6px;
             max-height: 180px; overflow-y: auto; padding: 10px; background: #fdfdfd; border-radius: 12px; border: 1px solid var(--border-color);
         }
+        /* 支援拖曳的項目樣式 */
         .image-item {
             display: flex; align-items: center; padding: 8px; background: white;
-            border-radius: 10px; cursor: pointer; border: 2px solid transparent; transition: 0.2s; font-size: 13px;
+            border-radius: 10px; cursor: grab; border: 2px solid transparent; transition: 0.2s; font-size: 13px;
+            user-select: none;
         }
+        .image-item:active { cursor: grabbing; }
+        .image-item.dragging { opacity: 0.5; border-style: dashed; border-color: var(--primary-action); }
         .image-item.active { border-color: var(--primary-action); background: #fffcf0; }
+        
         .list-num {
             width: 22px; height: 22px; background: var(--border-color); color: var(--text-light);
             border-radius: 50%; display: flex; justify-content: center; align-items: center;
             font-size: 11px; font-weight: 900; margin-right: 8px; flex-shrink: 0;
         }
         .image-item.active .list-num { background: var(--primary-action); color: #fff; }
-        .thumb { width: 45px; height: 35px; object-fit: cover; border-radius: 4px; margin-right: 10px; }
+        .thumb { width: 45px; height: 35px; object-fit: cover; border-radius: 4px; margin-right: 10px; pointer-events: none; }
 
         .pattern-options { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 5px; }
         .pattern-btn { width: 36px; height: 36px; border-radius: 50%; border: 3px solid #fff; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-size: cover; background-position: center; }
@@ -293,7 +296,7 @@
                 <span id="settings-arrow">▼</span>
             </div>
             <div class="settings-content">
-                <!-- 左側欄 -->
+                <!-- 左側欄：視覺參數 -->
                 <div class="control-group">
                     <span class="label-row-simple">遮罩樣式</span>
                     <div class="pattern-options">
@@ -327,22 +330,16 @@
                         </div>
                     </div>
 
-                    <div class="label-row-simple">
-                        <span>洞口大小</span>
-                        <span>(<span id="size-val">120px</span>)</span>
-                    </div>
+                    <div class="label-row-simple"><span>洞口大小</span><span>(<span id="size-val">120px</span>)</span></div>
                     <input type="range" id="size-slider" min="50" max="250" value="120" oninput="updateSizePreview(this.value)">
                     
                     <div id="current-adjust" style="display:none; margin-top:5px;">
-                        <div class="label-row-simple">
-                            <span>底圖微調縮放</span>
-                            <span>(<span id="scale-val">100%</span>)</span>
-                        </div>
+                        <div class="label-row-simple"><span>底圖微調縮放</span><span>(<span id="scale-val">100%</span>)</span></div>
                         <input type="range" id="scale-slider" min="10" max="300" value="100">
                     </div>
                 </div>
 
-                <!-- 右側欄 -->
+                <!-- 右側欄：題目管理 -->
                 <div class="control-group">
                     <span class="label-row-simple">題目清單</span>
                     <div class="image-list" id="image-list-ui"></div>
@@ -359,7 +356,8 @@
 </div>
 
 <script>
-    const DB_NAME = 'GuessGameDB_V11';
+    // --- IndexedDB ---
+    const DB_NAME = 'GuessGameDB_V12';
     const STORE_NAME = 'imagesStore';
     const DB_VERSION = 1;
     let db;
@@ -386,6 +384,7 @@
         });
     }
 
+    // --- 變數管理 ---
     let images = []; 
     let currentIndex = -1;
     let isPreview = true; 
@@ -423,8 +422,8 @@
         sidebarCollapsed = !sidebarCollapsed;
         const sb = document.getElementById('sidebar');
         const btn = document.querySelector('.collapse-btn');
-        if (sidebarCollapsed) { sb.classList.add('collapsed'); btn.innerText = '➡️'; } 
-        else { sb.classList.remove('collapsed'); btn.innerText = '⬅️'; }
+        sb.classList.toggle('collapsed', sidebarCollapsed);
+        btn.innerText = sidebarCollapsed ? '➡️' : '⬅️';
         setTimeout(loadCurrent, 300);
     }
 
@@ -432,20 +431,24 @@
         bottomSettingsCollapsed = !bottomSettingsCollapsed;
         const panel = document.getElementById('bottom-settings');
         const arrow = document.getElementById('settings-arrow');
-        if (bottomSettingsCollapsed) { panel.classList.add('collapsed'); arrow.innerText = '▲'; } 
-        else { panel.classList.remove('collapsed'); arrow.innerText = '▼'; }
+        panel.classList.toggle('collapsed', bottomSettingsCollapsed);
+        arrow.innerText = bottomSettingsCollapsed ? '▲' : '▼';
     }
 
+    // --- 精確比例設定 ---
     function setAspectRatio(ratio) {
         currentAspectRatio = ratio;
         canvas.classList.remove('ratio-4-3', 'ratio-16-9');
         canvas.classList.add(`ratio-${ratio}`);
         wrapper.classList.toggle('wide-mode', ratio === '16-9');
+        
         document.getElementById('btn-ratio-4-3').classList.toggle('btn-active', ratio === '4-3');
         document.getElementById('btn-ratio-16-9').classList.toggle('btn-active', ratio === '16-9');
+        
         if (currentIndex !== -1) {
             images[currentIndex].scale = 1; images[currentIndex].posX = 0; images[currentIndex].posY = 0;
         }
+        
         setTimeout(() => { loadCurrent(); resetHoles(); }, 100);
     }
 
@@ -475,8 +478,8 @@
         canvas.parentElement.classList.toggle('hide-mask', isAnswerRevealed);
     }
 
-    function goToNextImage() { if (images.length === 0) return; prepareSwitch(); currentIndex = (currentIndex + 1) % images.length; completeSwitch(); }
-    function goToPrevImage() { if (images.length === 0) return; prepareSwitch(); currentIndex = (currentIndex - 1 + images.length) % images.length; completeSwitch(); }
+    function goToNextImage() { if (images.length <= 1) return; prepareSwitch(); currentIndex = (currentIndex + 1) % images.length; completeSwitch(); }
+    function goToPrevImage() { if (images.length <= 1) return; prepareSwitch(); currentIndex = (currentIndex - 1 + images.length) % images.length; completeSwitch(); }
 
     function prepareSwitch() {
         imgLayer.style.opacity = '0'; imgLayer.style.display = 'none'; imgLayer.src = ''; 
@@ -554,16 +557,56 @@
         listUI.innerHTML = '';
         if (images.length === 0) { document.getElementById('current-adjust').style.display = 'none'; return; }
         document.getElementById('current-adjust').style.display = 'block';
+        
         images.forEach((img, idx) => {
             const item = document.createElement('div');
             item.className = `image-item ${idx === currentIndex ? 'active' : ''}`;
-            item.innerHTML = `<div class="list-num">${idx + 1}</div><img src="${img.src}" class="thumb"><div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${img.name.substring(0,8)}...</div><button class="btn" style="min-height:24px; width:auto; padding:2px 6px; border-radius:6px; font-size:10px; border-color:#eee;" onclick="deleteImg(event, ${idx})">✕</button>`;
-            item.onclick = () => { currentIndex = idx; isAnswerRevealed = false; canvas.parentElement.classList.remove('hide-mask'); renderList(); loadCurrent(); };
+            item.draggable = true;
+            item.innerHTML = `
+                <div class="list-num">${idx + 1}</div>
+                <img src="${img.src}" class="thumb">
+                <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${img.name.substring(0,8)}...</div>
+                <button class="btn" style="min-height:24px; width:auto; padding:2px 6px; border-radius:6px; font-size:10px; border-color:#eee;" onclick="deleteImg(event, ${idx})">✕</button>
+            `;
+            
+            item.ondragstart = (e) => {
+                e.dataTransfer.setData('text/plain', idx);
+                item.classList.add('dragging');
+            };
+            item.ondragend = () => item.classList.remove('dragging');
+            item.ondragover = (e) => e.preventDefault();
+            item.ondrop = async (e) => {
+                e.preventDefault();
+                const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+                const toIdx = idx;
+                if (fromIdx !== toIdx) {
+                    const movedItem = images.splice(fromIdx, 1)[0];
+                    images.splice(toIdx, 0, movedItem);
+                    if (currentIndex === fromIdx) currentIndex = toIdx;
+                    else if (currentIndex > fromIdx && currentIndex <= toIdx) currentIndex--;
+                    else if (currentIndex < fromIdx && currentIndex >= toIdx) currentIndex++;
+                    renderList(); loadCurrent(); await save();
+                }
+            };
+            
+            item.onclick = () => { 
+                currentIndex = idx; 
+                isAnswerRevealed = false; 
+                canvas.parentElement.classList.remove('hide-mask'); 
+                renderList(); 
+                loadCurrent(); 
+            };
             listUI.appendChild(item);
         });
     }
 
-    async function deleteImg(e, idx) { e.stopPropagation(); images.splice(idx, 1); if (currentIndex >= images.length) currentIndex = images.length - 1; renderList(); loadCurrent(); await save(); }
+    async function deleteImg(e, idx) { 
+        e.stopPropagation(); 
+        images.splice(idx, 1); 
+        if (images.length === 0) currentIndex = -1;
+        else if (currentIndex >= images.length) currentIndex = images.length - 1; 
+        renderList(); loadCurrent(); await save(); 
+    }
 
     function updateTransform() {
         if (currentIndex === -1) return;
@@ -577,6 +620,7 @@
         updateTransform(); await save();
     };
 
+    // --- 孔位重設：確保 100% 不出界且不重疊 ---
     function resetHoles() {
         const countEl = document.getElementById('hole-count');
         const shapeEl = document.getElementById('hole-shape');
@@ -586,15 +630,22 @@
         const count = parseInt(countEl.value);
         const size = parseInt(sizeSlider.value);
         const shape = shapeEl.value;
+        
         const cw = canvas.clientWidth; 
         const ch = canvas.clientHeight;
 
         for (let i = 0; i < count; i++) {
             let attempts = 0;
-            while (attempts < 500) {
+            while (attempts < 800) {
                 const x = Math.random() * (cw - size); 
                 const y = Math.random() * (ch - size);
-                const overlap = holeData.some(h => Math.sqrt(Math.pow(x - h.x, 2) + Math.pow(y - h.y, 2)) < size);
+                
+                // 核心邏輯：判斷是否重疊 (距離必須大於直徑 size)
+                const overlap = holeData.some(h => {
+                    const dist = Math.sqrt(Math.pow(x - h.x, 2) + Math.pow(y - h.y, 2));
+                    return dist < size; // 嚴格不重疊
+                });
+
                 if (!overlap) { addHole(i + 1, x, y, size, shape); break; }
                 attempts++;
             }
@@ -638,7 +689,7 @@
         });
     }
 
-    async function undoHole() { if (currentIndex === -1) return; images[currentIndex].revealedIds.pop(); refreshMask(); await save(); }
+    async function undoHole() { if (currentIndex === -1 || images[currentIndex].revealedIds.length === 0) return; images[currentIndex].revealedIds.pop(); refreshMask(); await save(); }
 
     function setupInteraction() {
         const start = (e) => { if (currentIndex === -1 || !isPreview) return; isDraggingImg = true; const cx = e.touches ? e.touches[0].clientX : e.clientX; const cy = e.touches ? e.touches[0].clientY : e.clientY; startX = cx - images[currentIndex].posX; startY = cy - images[currentIndex].posY; };
